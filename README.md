@@ -8,7 +8,7 @@
 - `/uwuify [message]`: Uwuifies the message.
 - `/toggle femboyfy`: adds emoticons like :3 or UwU to the end of every message you send.
 - `/toggle uwuify`: Uwuifies every message you send.
-- **Uwuify button**: adds a button to the quick access bar of messages. Pressing the button will uwuify the mssage.
+- **Uwuify button**: adds a button to the quick access bar of messages. Pressing the button will uwuify the message.
 
 ## Installation
 
