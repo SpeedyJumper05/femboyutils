@@ -65,39 +65,6 @@ function togglefemboyfy(ctx: CommandContext) {
     }
 }
 
-function lurk(id) {
-    Vencord.Webpack.findByProps("joinGuild")
-        .joinGuild(id, { lurker: true })
-        .then(() => {
-            setTimeout(() => patchGuild(id), 100);
-        })
-        .catch(() => {
-            throw new Error("Guild is not lurkable");
-        });
-}
-
-function patchGuild(id) {
-    Vencord.Webpack.findByProps("getGuildsTree")
-        .getGuildsTree()
-        .root.children.unshift({
-            type: "guild",
-            id,
-            unavailable: false,
-            children: [],
-        });
-    Vencord.Webpack.findByProps("getGuildCount").getGuild(id).joinedAt =
-        new Date();
-    Vencord.Webpack.findByProps("lurkingGuildIds").lurkingGuildIds().pop();
-    Vencord.Webpack.findByProps("joinGuild").transitionToGuildSync(id);
-}
-
-function start_lurk(opts, ctx) {
-    const id = findOption(opts, "message", "");
-    lurk(id);
-    const content = "Now lurking server";
-    sendBotMessage(ctx.channel.id, { content });
-}
-
 function rand(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -148,14 +115,6 @@ export default definePlugin({
             execute: opts => ({
                 content: findOption(opts, "message", "") + " :3 UwU",
             }),
-        },
-        {
-            name: "lurk",
-            description: "Lurks a server by ID",
-            options: [RequiredMessageOption],
-            execute: (opts, ctx) => {
-                start_lurk(opts, ctx);
-            },
         },
         {
             name: "arch",
