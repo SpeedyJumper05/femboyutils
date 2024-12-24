@@ -70,6 +70,8 @@ function rand(min: number, max: number) {
 }
 
 async function fetchReddit(sub: string, limit: number, sort: string) {
+    // FIXME: limits below 10 crash discord
+    // FIXME: limit == 10 shows same pic again and again, limit > 10 means there's (limit - 9) pics afaict; reddit limitation?
     const res = await fetch(
         `https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`
     );
