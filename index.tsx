@@ -71,7 +71,7 @@ function rand(min: number, max: number) {
 
 async function fetchReddit(sub: string, limit: number, sort: string) {
     const res = await fetch(
-        `https://www.reddit.com/r/${sub}/top.json?limit=${limit}&t=all&sort=${sort}`
+        `https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`
     );
     const resp = await res.json();
     try {
@@ -183,7 +183,7 @@ export default definePlugin({
                 },
                 {
                     name: "sort",
-                    description: "Which Reddit sorting to use (defaults to top)",
+                    description: "Which Reddit sorting to use (defaults to new)",
                     type: ApplicationCommandOptionType.STRING,
                     choices: [
                         {
@@ -207,7 +207,7 @@ export default definePlugin({
             execute: async (opts, ctx) => {
                 const subreddit = findOption(opts, "sub", "");
                 const limit = findOption(opts, "limit", "100");
-                const sort = findOption(opts, "sort", "top");
+                const sort = findOption(opts, "sort", "new");
                 return {
                     content: await fetchReddit(subreddit, +limit, sort),
                 };
