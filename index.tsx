@@ -70,20 +70,62 @@ function rand(min: number, max: number) {
 }
 
 async function fetchReddit(sub: string, limit: number, sort: string) {
-    // FIXME: limits below 10 crash discord
-    // FIXME: limit == 10 shows same pic again and again, limit > 10 means there's (limit - 9) pics afaict; reddit limitation?
-    const res = await fetch(
-        `https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`
-    );
-    const resp = await res.json();
-    try {
-        const { children } = resp.data;
-        let r = rand(0, children.length - 1);
-        while (children[r].data.domain !== "i.redd.it") {
-            console.log(children[r].data.url);
-            r = rand(0, children.length - 1);
+
+    let adjLimit = 0;
+
+    /*
+
+        const adj = await fetch(
+            `https://www.reddit.com/r/${sub}/${sort}.json?limit=5&t=all`
+        );
+        const probe = await adj.json();
+        for (let i = 0; i < probe.data.children.length; i++) {
+            const post = probe.data.children[i].data;
+            if (post.link_flair_text === "Announcement") {
+                adjLimit++;
+                limit++;
+                continue;
+            }
         }
-        return children[r].data.url;
+    */
+
+    const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
+    const resp = await res.json();
+    const list: string[] = [];
+    const redass = /(?<=files\/)(.*?)(?=-poster)/;
+
+    console.log(resp);
+
+    if (resp.data.children.length > limit) {
+        adjLimit = resp.data.children.length - limit;
+    }
+
+    try {
+        for (let i = adjLimit; i < resp.data.children.length; i++) {
+
+            const post = resp.data.children[i].data;
+
+            if (post.domain.includes("redgifs")) {
+                const match = post.media.oembed.thumbnail_url.match(redass);
+                list.push(`https://api.redgifs.com/v2/embed/discord?name=${match[0]}.mp4`);
+            } else if (post.post_hint === "hosted:video") {
+                list.push(`https://vxreddit.com${post.permalink}`);
+            } else if (post.is_gallery) {
+                const gallery = post.gallery_data.items;
+                for (let j = 0; j < gallery.length; j++) {
+                    const mediaID = gallery[j].media_id;
+                    if (post.media_metadata[mediaID].e === "Image") {
+                        list.push(`https://i.redd.it/${mediaID}.jpg`);
+                    } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
+                        list.push(`https://i.redd.it/${mediaID}.gif`);
+                    }
+                }
+            } else {
+                list.push(post.url);
+            }
+        }
+        const r = rand(0, list.length - 1);
+        return list[r];
     } catch (err) {
         console.error(resp);
         console.error(err);
@@ -208,10 +250,10 @@ export default definePlugin({
             ],
             execute: async (opts, ctx) => {
                 const subreddit = findOption(opts, "sub", "");
-                const limit = findOption(opts, "limit", "100");
+                const limit = findOption(opts, "limit", 100);
                 const sort = findOption(opts, "sort", "hot");
                 return {
-                    content: await fetchReddit(subreddit, +limit, sort),
+                    content: await fetchReddit(subreddit, limit, sort),
                 };
             },
         },
