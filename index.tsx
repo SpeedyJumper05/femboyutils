@@ -93,6 +93,7 @@ async function fetchReddit(sub: string, limit: number, sort: string) {
     const resp = await res.json();
     const list: string[] = [];
     const redass = /(?<=files\/)(.*?)(?=-poster)/;
+    const imgFormat = /(?<=image\/)(.*)/;
 
     console.log(resp);
 
@@ -115,7 +116,8 @@ async function fetchReddit(sub: string, limit: number, sort: string) {
                 for (let j = 0; j < gallery.length; j++) {
                     const mediaID = gallery[j].media_id;
                     if (post.media_metadata[mediaID].e === "Image") {
-                        list.push(`https://i.redd.it/${mediaID}.jpg`);
+                        const format = post.media_metadata[mediaID].m.match(imgFormat);
+                        list.push(`https://i.redd.it/${mediaID}.${format[0]}`);
                     } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
                         list.push(`https://i.redd.it/${mediaID}.gif`);
                     }
@@ -251,7 +253,7 @@ export default definePlugin({
             execute: async (opts, ctx) => {
                 const subreddit = findOption(opts, "sub", "");
                 const limit = findOption(opts, "limit", 100);
-                const sort = findOption(opts, "sort", "hot");
+                const sort = findOption(opts, "sort", "new");
                 return {
                     content: await fetchReddit(subreddit, limit, sort),
                 };
