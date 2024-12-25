@@ -237,7 +237,7 @@ export default definePlugin({
             execute: async (opts, ctx) => {
                 const subreddit = findOption(opts, "sub", "");
                 const limit = findOption(opts, "limit", 100);
-                const sort = findOption(opts, "sort", "new");
+                const sort = findOption(opts, "sort", "hot");
                 return {
                     content: await fetchReddit(subreddit, limit, sort),
                 };
