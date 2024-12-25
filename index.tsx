@@ -73,22 +73,6 @@ async function fetchReddit(sub: string, limit: number, sort: string) {
 
     let adjLimit = 0;
 
-    /*
-
-        const adj = await fetch(
-            `https://www.reddit.com/r/${sub}/${sort}.json?limit=5&t=all`
-        );
-        const probe = await adj.json();
-        for (let i = 0; i < probe.data.children.length; i++) {
-            const post = probe.data.children[i].data;
-            if (post.link_flair_text === "Announcement") {
-                adjLimit++;
-                limit++;
-                continue;
-            }
-        }
-    */
-
     const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
     const resp = await res.json();
     const list: string[] = [];
