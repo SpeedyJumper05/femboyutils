@@ -212,11 +212,6 @@ export default definePlugin({
                     required: true,
                 },
                 {
-                    name: "limit",
-                    description: "How many pics to choose from (defaults to 100)",
-                    type: ApplicationCommandOptionType.NUMBER,
-                },
-                {
                     name: "sort",
                     description: "Which Reddit sorting method to use (defaults to hot)",
                     type: ApplicationCommandOptionType.STRING,
@@ -227,16 +222,21 @@ export default definePlugin({
                             label: "top",
                         },
                         {
-                            name: "hot",
-                            value: "hot",
-                            label: "hot",
-                        },
-                        {
                             name: "new",
                             value: "new",
                             label: "new",
                         },
+                        {
+                            name: "hot",
+                            value: "hot",
+                            label: "hot",
+                        },
                     ]
+                },
+                {
+                    name: "limit",
+                    description: "How many pics to choose from (defaults to 100)",
+                    type: ApplicationCommandOptionType.NUMBER,
                 },
             ],
             execute: async (opts, ctx) => {
@@ -245,6 +245,7 @@ export default definePlugin({
                 const sort = findOption(opts, "sort", "hot");
                 return {
                     content: await fetchReddit(subreddit, limit, sort),
+                    // TODO: add option to make output ephemeral (i wasted an hour trying to implement this unsuccessfully)
                 };
             },
         },
