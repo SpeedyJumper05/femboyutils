@@ -26,6 +26,8 @@ import { UwUifyicon } from "./uwuifyicon";
 const uwuifier = new UwUifier();
 
 
+import { sendMessage } from "@utils/discord";
+
 import Femboyfy from "./femboyfy";
 const femboyfier = new Femboyfy();
 
@@ -69,7 +71,7 @@ function rand(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-async function fetchReddit(sub: string, limit: number, sort: string) {
+async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: boolean, ctx) {
 
     let adjLimit = 0;
 
@@ -116,12 +118,31 @@ async function fetchReddit(sub: string, limit: number, sort: string) {
             }
         }
         const r = rand(0, list.length - 1);
-        return list[r];
+        // TODO: Get Clyde to embed links
+        if (ephemeral) {
+            sendBotMessage(ctx.channel.id, {
+                /*
+                attachments: [
+                    {
+                        id: generateId(),
+                        url: list[r] + "#",
+                        proxy_url: list[r] + "#",
+                        size: await list[r].getSize(),
+                        filename: "femboy.jpg",
+                        spoiler: false,
+                        content_type: undefined
+                    }
+                ],
+                */
+                content: list[r]
+            });
+        } else {
+            sendMessage(ctx.channel.id, { content: list[r] });
+        }
     } catch (err) {
         console.error(resp);
         console.error(err);
     }
-    return "";
 }
 
 export default definePlugin({
@@ -187,6 +208,7 @@ export default definePlugin({
         {
             name: "femboy pic",
             description: "Sends a femboy pic from Reddit",
+            inputType: ApplicationCommandInputType.BUILT_IN,
             options: [
                 {
                     name: "sub",
@@ -238,19 +260,21 @@ export default definePlugin({
                     description: "How many pics to choose from (defaults to 100)",
                     type: ApplicationCommandOptionType.NUMBER,
                 },
+                {
+                    name: "ephemeral",
+                    description: "Make the output ephemeral",
+                    type: ApplicationCommandOptionType.BOOLEAN,
+                }
             ],
             execute: async (opts, ctx) => {
                 const subreddit = findOption(opts, "sub", "");
                 const limit = findOption(opts, "limit", 100);
                 const sort = findOption(opts, "sort", "hot");
-                return {
-                    content: await fetchReddit(subreddit, limit, sort),
-                    // TODO: add option to make output ephemeral (i wasted an hour trying to implement this unsuccessfully)
-                };
+                const ephemeral = findOption(opts, "ephemeral", false);
+                fetchReddit(subreddit, limit, sort, ephemeral, ctx);
             },
         },
     ],
-    patches: [],
 
     start() {
         addButton("luca-uwuify", message => {
