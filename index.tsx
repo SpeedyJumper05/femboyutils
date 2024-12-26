@@ -118,7 +118,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
             }
         }
         const r = rand(0, list.length - 1);
-        // TODO: Get Clyde to embed links
+        // TODO: Get Clyde to embed links (use EmbedJSON)
         if (ephemeral) {
             sendBotMessage(ctx.channel.id, {
                 /*
