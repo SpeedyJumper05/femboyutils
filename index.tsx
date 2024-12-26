@@ -99,12 +99,16 @@ async function fetchReddit(sub: string, limit: number, sort: string) {
                 const gallery = post.gallery_data.items;
                 for (let j = 0; j < gallery.length; j++) {
                     const mediaID = gallery[j].media_id;
-                    console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}`);
                     if (post.media_metadata[mediaID].e === "Image") {
                         const format = post.media_metadata[mediaID].m.match(imgFormat);
                         list.push(`https://i.redd.it/${mediaID}.${format[0]}`);
+                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.${format[0]}`);
                     } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
                         list.push(`https://i.redd.it/${mediaID}.gif`);
+                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.gif`);
+                    } else {
+                        console.error(`Unknown media type: ${post.media_metadata[mediaID]}`);
+                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}`);
                     }
                 }
             } else {
