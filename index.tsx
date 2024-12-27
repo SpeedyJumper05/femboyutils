@@ -71,13 +71,39 @@ function rand(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: boolean, ctx) {
+interface RedditPost {
+    url: string | string[];
+    author: string;
+    title: string;
+    permalink: string;
+    isGallery: boolean;
+    dimensions?: { width: number; height: number; };
+}
+
+function removeUnicode(text: string): string {
+    return text.replace(/[^\x00-\x7F]/g, "");
+}
+
+async function getImageDimensions(url: string): Promise<{ width: number; height: number; }> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            resolve({ width: img.width, height: img.height });
+        };
+        img.onerror = error => {
+            resolve({ width: 0, height: 0 });
+        };
+        img.src = url;
+    });
+}
+
+async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: boolean, ctx: any) {
 
     let adjLimit = 0;
 
     const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
     const resp = await res.json();
-    const list: string[] = [];
+    const list: RedditPost[] = [];
     const redass = /(?<=files\/)(.*?)(?=-poster)/;
     const imgFormat = /(?<=image\/)(.*)/;
 
@@ -92,56 +118,92 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
 
             const post = resp.data.children[i].data;
 
+            const postDetails: RedditPost = {
+                author: post.author,
+                title: post.title,
+                permalink: `https://reddit.com${post.permalink}`,
+                url: "",
+                isGallery: post.is_gallery || false
+            };
+
             if (post.domain.includes("redgifs")) {
                 const match = post.media.oembed.thumbnail_url.match(redass);
-                list.push(`https://api.redgifs.com/v2/embed/discord?name=${match[0]}.mp4`);
+                postDetails.url = `https://api.redgifs.com/v2/embed/discord?name=${match[0]}.mp4`;
+                postDetails.dimensions = { width: post.media.oembed.width, height: post.media.oembed.height };
+                list.push(postDetails);
             } else if (post.post_hint === "hosted:video") {
-                list.push(`https://vxreddit.com${post.permalink}`);
+                postDetails.url = `https://vxreddit.com${post.permalink}`;
+                postDetails.dimensions = { width: post.media.reddit_video.width, height: post.media.reddit_video.height };
+                list.push(postDetails);
             } else if (post.is_gallery) {
                 const gallery = post.gallery_data.items;
+                const urls: string[] = [];
                 for (let j = 0; j < gallery.length; j++) {
                     const mediaID = gallery[j].media_id;
                     if (post.media_metadata[mediaID].e === "Image") {
                         const format = post.media_metadata[mediaID].m.match(imgFormat);
-                        list.push(`https://i.redd.it/${mediaID}.${format[0]}`);
+                        urls.push(`https://i.redd.it/${mediaID}.${format[0]}`);
                         console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.${format[0]}`);
                     } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
-                        list.push(`https://i.redd.it/${mediaID}.gif`);
+                        urls.push(`https://i.redd.it/${mediaID}.gif`);
                         console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.gif`);
                     } else {
                         console.error(`Unknown media type: ${post.media_metadata[mediaID]}`);
                         console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}`);
                     }
                 }
+                postDetails.url = urls;
+                list.push(postDetails);
             } else {
-                list.push(post.url);
+                postDetails.url = post.url;
+                list.push(postDetails);
             }
         }
+
         const r = rand(0, list.length - 1);
-        // TODO: Get Clyde to embed links (use EmbedJSON)
-        if (ephemeral) {
-            sendBotMessage(ctx.channel.id, {
-                /*
-                attachments: [
-                    {
-                        id: generateId(),
-                        url: list[r] + "#",
-                        proxy_url: list[r] + "#",
-                        size: await list[r].getSize(),
-                        filename: "femboy.jpg",
-                        spoiler: false,
-                        content_type: undefined
-                    }
-                ],
-                */
-                content: list[r]
-            });
+        const selectedPost = list[r];
+
+        let selectedUrl: string;
+        if (Array.isArray(selectedPost.url)) {
+            const rI = rand(0, selectedPost.url.length - 1);
+            selectedUrl = selectedPost.url[rI];
         } else {
-            sendMessage(ctx.channel.id, { content: list[r] });
+            selectedUrl = selectedPost.url;
         }
-    } catch (err) {
-        console.error(resp);
-        console.error(err);
+        // TODO: GalleryNum [2/5]
+        if (!ephemeral) {
+            sendMessage(ctx.channel.id, { content: `-# ${selectedPost.author}\n[${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n${selectedUrl}` });
+        } else {
+            // FIXME: some Image and video embeds are not embedding (working: jpg, jpeg)
+            const embed: any = {
+                type: "rich",
+                author: selectedPost.author,
+                title: selectedPost.title,
+                url: selectedPost.permalink,
+            };
+
+            if (selectedPost.dimensions === undefined) {
+                try {
+                    const dimensions = await getImageDimensions(selectedUrl);
+                    embed.image = { url: selectedUrl, width: dimensions.width, height: dimensions.height };
+                } catch (error) {
+                    console.error("Error getting image dimensions:", error);
+                }
+            } else {
+                embed.video = { url: selectedUrl, width: selectedPost.dimensions.width, height: selectedPost.dimensions.height };
+            }
+            console.log(embed);
+
+            sendBotMessage(ctx.channel.id, {
+                embeds: [embed],
+                author: {
+                    username: "Astolfo",
+                    discriminator: "0"
+                }
+            });
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
