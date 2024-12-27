@@ -172,7 +172,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
         }
         // TODO: GalleryNum [2/5]
         if (!ephemeral) {
-            sendMessage(ctx.channel.id, { content: `-# ${selectedPost.author}\n[${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n${selectedUrl}` });
+            sendMessage(ctx.channel.id, { content: `### [${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n-# ${selectedPost.author}\n${selectedUrl}` });
         } else {
             // FIXME: some Image and video embeds are not embedding (working: jpg, jpeg)
             const embed: any = {
