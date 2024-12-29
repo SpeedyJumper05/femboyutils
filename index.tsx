@@ -128,7 +128,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
 
             if (post.domain.includes("redgifs")) {
                 const match = post.media.oembed.thumbnail_url.match(redass);
-                postDetails.url = `https://api.redgifs.com/v2/embed/discord?name=${match[0]}.mp4`;
+                postDetails.url = `https://files.redgifs.com/${match[0]}.mp4`;
                 postDetails.dimensions = { width: post.media.oembed.width, height: post.media.oembed.height };
                 list.push(postDetails);
             } else if (post.post_hint === "hosted:video") {
@@ -172,7 +172,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
         }
         // TODO: GalleryNum [2/5]
         if (!ephemeral) {
-            sendMessage(ctx.channel.id, { content: `### [${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n-# ${selectedPost.author}\n${selectedUrl}` });
+            sendMessage(ctx.channel.id, { content: `## [${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n-# ${selectedPost.author}\n${selectedUrl}` });
         } else {
             // FIXME: some Image and video embeds are not embedding (working: jpg, jpeg)
             const embed: any = {
@@ -193,12 +193,14 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
                 embed.video = { url: selectedUrl, width: selectedPost.dimensions.width, height: selectedPost.dimensions.height };
             }
             console.log(embed);
+            console.log(selectedPost);
 
             sendBotMessage(ctx.channel.id, {
                 embeds: [embed],
                 author: {
-                    username: "Astolfo",
-                    discriminator: "0"
+                    username: ":)",
+                    discriminator: "0",
+                    avatar: "https://files.catbox.moe/xvnr3c.png"
                 }
             });
         }
