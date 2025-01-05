@@ -188,7 +188,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
         // TODO: GalleryNum [2/5]
         if (!ephemeral) {
             console.log(selectedPost);
-            sendMessage(ctx.channel.id, { content: `## ${selectedPost.title} [[link]](<${selectedPost.permalink}>)\n-# Author: [${selectedPost.author}](<https://www.reddit.com/user/${selectedPost.author}/>)\n${selectedUrl}` });
+            sendMessage(ctx.channel.id, { content: `### ${selectedPost.title} [[link]](<${selectedPost.permalink}>)\n-# Author: [${selectedPost.author}](<https://www.reddit.com/user/${selectedPost.author}/>)\n${selectedUrl}` });
         } else {
             const embed: any = {
                 type: "rich",
