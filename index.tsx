@@ -72,11 +72,11 @@ function rand(min: number, max: number) {
 }
 
 interface RedditPost {
-    url: string | string[];
     author: string;
     title: string;
+    url: string | string[];
     permalink: string;
-    isGallery: boolean;
+    is_video: boolean;
     dimensions?: { width: number; height: number; };
 }
 
@@ -103,7 +103,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
 
     const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
     const resp = await res.json();
-    const list: RedditPost[] = [];
+    let list: RedditPost[] = [];
     const redass = /(?<=files\/)(.*?)(?=-poster)/;
     const imgFormat = /(?<=image\/)(.*)/;
 
@@ -115,53 +115,68 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
 
     try {
         for (let i = adjLimit; i < resp.data.children.length; i++) {
+            try {
+                const post = resp.data.children[i].data;
 
-            const post = resp.data.children[i].data;
+                const postDetails: RedditPost = {
+                    author: post.author,
+                    title: post.title,
+                    url: "",
+                    permalink: `https://reddit.com${post.permalink}`,
+                    is_video: false
+                };
 
-            const postDetails: RedditPost = {
-                author: post.author,
-                title: post.title,
-                permalink: `https://reddit.com${post.permalink}`,
-                url: "",
-                isGallery: post.is_gallery || false
-            };
-
-            if (post.domain.includes("redgifs")) {
-                const match = post.media.oembed.thumbnail_url.match(redass);
-                postDetails.url = `https://files.redgifs.com/${match[0]}.mp4`;
-                postDetails.dimensions = { width: post.media.oembed.width, height: post.media.oembed.height };
-                list.push(postDetails);
-            } else if (post.post_hint === "hosted:video") {
-                postDetails.url = `https://vxreddit.com${post.permalink}`;
-                postDetails.dimensions = { width: post.media.reddit_video.width, height: post.media.reddit_video.height };
-                list.push(postDetails);
-            } else if (post.is_gallery) {
-                const gallery = post.gallery_data.items;
-                const urls: string[] = [];
-                for (let j = 0; j < gallery.length; j++) {
-                    const mediaID = gallery[j].media_id;
-                    if (post.media_metadata[mediaID].e === "Image") {
-                        const format = post.media_metadata[mediaID].m.match(imgFormat);
-                        urls.push(`https://i.redd.it/${mediaID}.${format[0]}`);
-                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.${format[0]}`);
-                    } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
-                        urls.push(`https://i.redd.it/${mediaID}.gif`);
-                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.gif`);
+                if (post.domain.includes("redgifs")) {
+                    if (post.post_hint === "image") {
+                        postDetails.url = post.url;
+                        list.push(postDetails);
                     } else {
-                        console.error(`Unknown media type: ${post.media_metadata[mediaID]}`);
-                        console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}`);
+                        const match = post.media.oembed.thumbnail_url.match(redass);
+                        postDetails.url = `https://files.redgifs.com/${match[0]}.mp4`;
+                        postDetails.is_video = true;
+                        list.push(postDetails);
                     }
+                } else if (post.post_hint === "hosted:video") {
+                    postDetails.url = `https://vxreddit.com${post.permalink}`;
+                    postDetails.is_video = true;
+                    list.push(postDetails);
+                } else if (post.is_gallery) {
+                    const gallery = post.gallery_data.items;
+                    const urls: string[] = [];
+                    for (let j = 0; j < gallery.length; j++) {
+                        const mediaID = gallery[j].media_id;
+                        if (post.media_metadata[mediaID].e === "Image") {
+                            const format = post.media_metadata[mediaID].m.match(imgFormat);
+                            urls.push(`https://i.redd.it/${mediaID}.${format[0]}`);
+                            console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.${format[0]}`);
+                        } else if (post.media_metadata[mediaID].e === "AnimatedImage") {
+                            urls.push(`https://i.redd.it/${mediaID}.gif`);
+                            console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}.gif`);
+                        } else {
+                            console.error(`Unknown media type: ${post.media_metadata[mediaID]}`);
+                            console.log(`i: ${i}, j: ${j}, mediaID: ${mediaID}`);
+                        }
+                    }
+                    postDetails.url = urls;
+                    list.push(postDetails);
+                } else {
+                    postDetails.url = post.url;
+                    list.push(postDetails);
                 }
-                postDetails.url = urls;
-                list.push(postDetails);
-            } else {
-                postDetails.url = post.url;
-                list.push(postDetails);
+            } catch (error) {
+                console.error(`${error} \nat i: ${i}`);
             }
+        }
+
+        console.log(list);
+        if (ephemeral) {
+            list = list.filter(post => !post.is_video);
+            console.log(list);
         }
 
         const r = rand(0, list.length - 1);
         const selectedPost = list[r];
+        console.log("selected list object: " + r);
 
         let selectedUrl: string;
         if (Array.isArray(selectedPost.url)) {
@@ -172,9 +187,9 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
         }
         // TODO: GalleryNum [2/5]
         if (!ephemeral) {
-            sendMessage(ctx.channel.id, { content: `## [${removeUnicode(selectedPost.title)}](<${selectedPost.permalink}>)\n-# ${selectedPost.author}\n${selectedUrl}` });
+            console.log(selectedPost);
+            sendMessage(ctx.channel.id, { content: `## ${selectedPost.title} [[link]](<${selectedPost.permalink}>)\n-# Author: [${selectedPost.author}](<https://www.reddit.com/user/${selectedPost.author}/>)\n${selectedUrl}` });
         } else {
-            // FIXME: some Image and video embeds are not embedding (working: jpg, jpeg)
             const embed: any = {
                 type: "rich",
                 author: selectedPost.author,
@@ -182,25 +197,17 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
                 url: selectedPost.permalink,
             };
 
-            if (selectedPost.dimensions === undefined) {
-                try {
-                    const dimensions = await getImageDimensions(selectedUrl);
-                    embed.image = { url: selectedUrl, width: dimensions.width, height: dimensions.height };
-                } catch (error) {
-                    console.error("Error getting image dimensions:", error);
-                }
-            } else {
-                embed.video = { url: selectedUrl, width: selectedPost.dimensions.width, height: selectedPost.dimensions.height };
-            }
+            const dimensions = await getImageDimensions(selectedUrl);
+            embed.image = { url: selectedUrl, width: dimensions.width, height: dimensions.height };
+
             console.log(embed);
             console.log(selectedPost);
 
             sendBotMessage(ctx.channel.id, {
                 embeds: [embed],
                 author: {
-                    username: ":)",
-                    discriminator: "0",
-                    avatar: "https://files.catbox.moe/xvnr3c.png"
+                    username: "Femboy dealer",
+                    discriminator: "0"
                 }
             });
         }
