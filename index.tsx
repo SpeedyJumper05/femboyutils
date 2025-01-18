@@ -132,7 +132,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
                         list.push(postDetails);
                     } else {
                         const match = post.media.oembed.thumbnail_url.match(redass);
-                        postDetails.url = `https://files.redgifs.com/${match[0]}.mp4`;
+                        postDetails.url = `https://media.redgifs.com/${match[0]}.mp4`;
                         postDetails.is_video = true;
                         list.push(postDetails);
                     }
