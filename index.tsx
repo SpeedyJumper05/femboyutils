@@ -104,7 +104,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
     const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
     const resp = await res.json();
     let list: RedditPost[] = [];
-    const redass = /(?<=files\/)(.*?)(?=-poster)/;
+    const redass = /(?<=com\/)(.*?)(?=-poster)/;
     const imgFormat = /(?<=image\/)(.*)/;
 
     console.log(resp);
