@@ -188,7 +188,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
         // TODO: GalleryNum [2/5]
         if (!ephemeral) {
             console.log(selectedPost);
-            sendMessage(ctx.channel.id, { content: `### ${selectedPost.title} [[link]](<${selectedPost.permalink}>)\n-# Author: [${selectedPost.author}](<https://www.reddit.com/user/${selectedPost.author}/>)\n${selectedUrl}` });
+            sendMessage(ctx.channel.id, { content: `### ${selectedPost.title} [[link]](<${selectedPost.permalink}>) [⠀](${selectedUrl})\n-# Author: [${selectedPost.author}](<https://www.reddit.com/user/${selectedPost.author}/>)` });
         } else {
             const embed: any = {
                 type: "rich",
@@ -287,17 +287,27 @@ export default definePlugin({
                     type: ApplicationCommandOptionType.STRING,
                     choices: [
                         {
+                            name: "FemBoys (nsfw)",
+                            value: "FemBoys",
+                            label: "FemBoys",
+                        },
+                        {
+                            name: "FemboyHentai (nsfw)",
+                            value: "FemboyHentai",
+                            label: "FemboyHentai",
+                        },
+                        {
+                            name: "femboy",
+                            value: "femboy",
+                            label: "femboy",
+                        },
+                        {
                             name: "FemboyThighsClub",
                             value: "FemboyThighsClub",
                             label: "FemboyThighsClub",
                         },
                         {
-                            name: "FemBoys",
-                            value: "FemBoys",
-                            label: "FemBoys",
-                        },
-                        {
-                            name: "FemboyFeetPics",
+                            name: "FemboyFeetPics (nsfw)",
                             value: "FemboyFeetPics",
                             label: "FemboyFeetPics",
                         },
