@@ -3,7 +3,7 @@
 ## Features
 
 - `/arch`: sends a message containing "I use arch btw" into the chat you're currently in.
-- `/femboy pic`: sends a random image from r/FemboyThighsClub, r/FemBoys (NSFW!), or r/FemboyFeetPics (NSFW!).
+- `/femboy pic`: sends a random image from r/FemBoys (NSFW!), r/FemboyHentai (NSFW!), r/femboy, r/FemboyThighsClub or r/FemboyFeetPics (NSFW!).
 - `/femboyfy [message]`: adds emoticons like :3 or UwU to the end of the message.
 - `/uwuify [message]`: Uwuifies the message.
 - `/toggle femboyfy`: adds emoticons like :3 or UwU to the end of every message you send.
