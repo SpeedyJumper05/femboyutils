@@ -104,7 +104,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
     const res = await fetch(`https://www.reddit.com/r/${sub}/${sort}.json?limit=${limit}&t=all`);
     const resp = await res.json();
     let list: RedditPost[] = [];
-    const redass = /(?<=com\/)(.*?)(?=-poster)/;
+    const redass = /^(.*?)(?=-poster)/;
     const imgFormat = /(?<=image\/)(.*)/;
 
     console.log(resp);
@@ -132,7 +132,7 @@ async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: 
                         list.push(postDetails);
                     } else {
                         const match = post.media.oembed.thumbnail_url.match(redass);
-                        postDetails.url = `https://media.redgifs.com/${match[0]}.mp4`;
+                        postDetails.url = `${match[0]}.mp4`;
                         postDetails.is_video = true;
                         list.push(postDetails);
                     }
