@@ -13,11 +13,11 @@ import {
     sendBotMessage,
 } from "@api/Commands";
 import {
-    addPreSendListener,
+    addMessagePreSendListener,
     MessageObject,
-    removePreSendListener,
+    removeMessagePreSendListener,
 } from "@api/MessageEvents";
-import { addButton } from "@api/MessagePopover";
+import { addMessagePopoverButton } from "@api/MessagePopover";
 import definePlugin from "@utils/types";
 import { ChannelStore } from "@webpack/common";
 
@@ -358,7 +358,7 @@ export default definePlugin({
     ],
 
     start() {
-        addButton("luca-uwuify", message => {
+        addMessagePopoverButton("luca-uwuify", message => {
             if (!message.content) return null;
 
             return {
@@ -374,12 +374,12 @@ export default definePlugin({
                 },
             };
         });
-        this.preSend = addPreSendListener(async (_, message) => {
+        this.preSend = addMessagePreSendListener(async (_, message) => {
             await handle_messages(message);
         });
     },
     stop() {
-        this.preSend = removePreSendListener(async (_, message) => {
+        this.preSend = removeMessagePreSendListener(async (_, message) => {
             await handle_messages(message);
         });
     },
