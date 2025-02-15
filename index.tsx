@@ -97,6 +97,8 @@ async function getImageDimensions(url: string): Promise<{ width: number; height:
     });
 }
 
+// TODO: fancyfying func (redgif -> with sound)
+
 async function fetchReddit(sub: string, limit: number, sort: string, ephemeral: boolean, ctx: any) {
 
     let adjLimit = 0;
